@@ -3,7 +3,7 @@ package crypto
 import (
 	"crypto/aes"
 
-	"github.com/joshuarider/pals/encoding"
+	"github.com/joshuarider/cryptopals/encoding"
 )
 
 func PKCSPad(chunk []byte, targetLength int) []byte {

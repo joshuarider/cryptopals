@@ -3,7 +3,7 @@ package cracker
 import (
 	"container/heap"
 
-	"github.com/joshuarider/pals/encoding"
+	"github.com/joshuarider/cryptopals/encoding"
 )
 
 type Candidate struct {

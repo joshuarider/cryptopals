@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/joshuarider/pals/crypto"
+	"github.com/joshuarider/cryptopals/crypto"
 )
 
 func init() {
