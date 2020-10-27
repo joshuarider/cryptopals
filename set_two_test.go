@@ -92,7 +92,7 @@ func TestProblemTen(t *testing.T) {
 
 	decrypted := crypto.CBCDecryptAES(cipherBytes, key, iv)
 
-	if got := string(decrypted); FUNKY_MUSIC != got {
+	if got := string(decrypted); got != FUNKY_MUSIC {
 		t.Errorf("wanted the lyrics to Play That Funky Music, got = %#v", got)
 	}
 }

@@ -44,8 +44,8 @@ func mysteryEncrypter() (func([]byte) []byte, string) {
 }
 
 func cipherOracle(encrypter func([]byte) []byte) string {
-	testBlock := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-	cipherText := encrypter(testBlock)
+	knownText := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	cipherText := encrypter(knownText)
 
 	length := len(cipherText)
 	matchLength := 0
