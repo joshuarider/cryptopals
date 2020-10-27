@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -22,28 +21,26 @@ func randomBytes(n int) []byte {
 	return bytes
 }
 
-func mysteryEncrypter() func([]byte) []byte {
+func mysteryEncrypter() (func([]byte) []byte, string) {
 	aesKey := randomBytes(16)
 
 	frontPad := randomBytes(rand.Intn(6) + 5)
 	backPad := randomBytes(rand.Intn(6) + 5)
 
 	if rand.Intn(2) == 0 {
-		fmt.Println("Encrypter under the hood: ECB")
 		return func(in []byte) []byte {
 			paddedIn := append(frontPad, in...)
 			paddedIn = append(paddedIn, backPad...)
 			return crypto.ECBEncryptAES(paddedIn, aesKey)
-		}
+		}, "ECB"
 	}
 
-	fmt.Println("Encrypter under the hood: CBC")
 	iv := randomBytes(16)
 	return func(in []byte) []byte {
 		paddedIn := append(frontPad, in...)
 		paddedIn = append(paddedIn, backPad...)
 		return crypto.CBCEncryptAES(paddedIn, aesKey, iv)
-	}
+	}, "CBC"
 }
 
 func cipherOracle(encrypter func([]byte) []byte) string {
