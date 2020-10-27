@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/joshuarider/cryptopals/crypto"
+	"github.com/joshuarider/cryptopals/encoding"
 )
 
 func init() {
@@ -41,6 +43,20 @@ func mysteryEncrypter() (func([]byte) []byte, string) {
 		paddedIn = append(paddedIn, backPad...)
 		return crypto.CBCEncryptAES(paddedIn, aesKey, iv)
 	}, "CBC"
+}
+
+func appendingECBEncrypter() (func([]byte) []byte, error) {
+	aesKey := randomBytes(16)
+	suffix, err := encoding.B64ToBytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
+
+	if err != nil {
+		return nil, fmt.Errorf("couldn't decode B64ToBytes %v", err)
+	}
+
+	return func(plaintext []byte) []byte {
+		fullText := append(plaintext, suffix...)
+		return crypto.ECBEncryptAES(fullText, aesKey)
+	}, nil
 }
 
 func cipherOracle(encrypter func([]byte) []byte) string {

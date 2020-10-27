@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"testing"
 
@@ -107,4 +108,12 @@ func TestProblemEleven(t *testing.T) {
 			t.Errorf("prediction: %s, actual: %s", prediction, actual)
 		}
 	}
+}
+
+// 2.12 Byte-at-a-time ECB Decryption (Simple)
+func TestProblemTwelve(t *testing.T) {
+	crypter, _ := appendingECBEncrypter()
+	fmt.Println(len(crypter([]byte{})))
+	fmt.Println(len(crypter([]byte{41, 41, 41, 41, 41, 41})))
+	fmt.Println(len(crypter([]byte{41, 41, 41, 41, 41, 41, 41})))
 }
