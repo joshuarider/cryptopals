@@ -211,3 +211,29 @@ func Transpose(bytes []byte, size int) [][]byte {
 
 	return transpositions
 }
+
+func BruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) byte {
+	for c := uint8(0); c <= 254; c++ {
+		testCase := append(known, c)
+
+		if out := encrypter(testCase); compare(out, target) {
+			return c
+		}
+	}
+
+	return 0
+}
+
+func compare(s1 []byte, s2 []byte) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	for i := 0; i < len(s1); i++ {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+
+	return true
+}

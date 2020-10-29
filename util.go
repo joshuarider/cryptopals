@@ -59,6 +59,20 @@ func appendingECBEncrypter() (func([]byte) []byte, error) {
 	}, nil
 }
 
+func findBlockSize(encrypter func([]byte) []byte) int {
+	inputBytes := []byte{}
+	base := len(encrypter(inputBytes))
+	cipherLength := base
+
+	for base == cipherLength {
+		inputBytes = append(inputBytes, byte(0x41))
+
+		cipherLength = len(encrypter(inputBytes))
+	}
+
+	return cipherLength - base
+}
+
 func cipherOracle(encrypter func([]byte) []byte) string {
 	knownText := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	cipherText := encrypter(knownText)

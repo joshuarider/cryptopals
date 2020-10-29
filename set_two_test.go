@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
 	"github.com/joshuarider/cryptopals/encoding"
 )
@@ -113,7 +114,15 @@ func TestProblemEleven(t *testing.T) {
 // 2.12 Byte-at-a-time ECB Decryption (Simple)
 func TestProblemTwelve(t *testing.T) {
 	crypter, _ := appendingECBEncrypter()
-	fmt.Println(len(crypter([]byte{})))
-	fmt.Println(len(crypter([]byte{41, 41, 41, 41, 41, 41})))
-	fmt.Println(len(crypter([]byte{41, 41, 41, 41, 41, 41, 41})))
+
+	if blockSize := findBlockSize(crypter); blockSize != 16 {
+		t.Fatalf("wanted blockSize = 16, got %d", blockSize)
+	}
+
+	if encryptionMode := cipherOracle(crypter); encryptionMode != "ECB" {
+		t.Fatalf("wanted encryptionMode = ECB, got %s", encryptionMode)
+	}
+
+	target := crypter([]byte("AAAAAAAAAAAAAAAB"))
+	fmt.Println(string(cracker.BruteTrailingECBByte(crypter, []byte("AAAAAAAAAAAAAAA"), target)))
 }
