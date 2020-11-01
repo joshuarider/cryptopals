@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"testing"
 
@@ -113,16 +112,21 @@ func TestProblemEleven(t *testing.T) {
 
 // 2.12 Byte-at-a-time ECB Decryption (Simple)
 func TestProblemTwelve(t *testing.T) {
-	crypter, _ := appendingECBEncrypter()
+	want := "Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
 
-	if blockSize := findBlockSize(crypter); blockSize != 16 {
-		t.Fatalf("wanted blockSize = 16, got %d", blockSize)
-	}
+	crypter, _ := appendingECBEncrypter()
 
 	if encryptionMode := cipherOracle(crypter); encryptionMode != "ECB" {
 		t.Fatalf("wanted encryptionMode = ECB, got %s", encryptionMode)
 	}
 
-	target := crypter([]byte("AAAAAAAAAAAAAAAB"))
-	fmt.Println(string(cracker.BruteTrailingECBByte(crypter, []byte("AAAAAAAAAAAAAAA"), target)))
+	blockSize := findBlockSize(crypter)
+
+	if blockSize != 16 {
+		t.Fatalf("wanted blockSize = 16, got %d", blockSize)
+	}
+
+	if got := string(cracker.CrackAppendedECB(crypter, blockSize)); want != got {
+		t.Errorf("want: %v, got: %v", want, got)
+	}
 }

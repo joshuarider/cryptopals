@@ -55,6 +55,7 @@ func appendingECBEncrypter() (func([]byte) []byte, error) {
 
 	return func(plaintext []byte) []byte {
 		fullText := append(plaintext, suffix...)
+
 		return crypto.ECBEncryptAES(fullText, aesKey)
 	}, nil
 }

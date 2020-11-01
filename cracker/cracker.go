@@ -2,6 +2,7 @@ package cracker
 
 import (
 	"container/heap"
+	"fmt"
 
 	"github.com/joshuarider/cryptopals/encoding"
 )
@@ -212,16 +213,52 @@ func Transpose(bytes []byte, size int) [][]byte {
 	return transpositions
 }
 
-func BruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) byte {
-	for c := uint8(0); c <= 254; c++ {
-		testCase := append(known, c)
+func CrackAppendedECB(encrypter func([]byte) []byte, blockSize int) []byte {
+	mysteryPadSize := len(encrypter([]byte{}))
 
-		if out := encrypter(testCase); compare(out, target) {
-			return c
+	revealedBytes := []byte{}
+
+	for blockIdx := 0; len(revealedBytes) < mysteryPadSize; blockIdx++ {
+		blockStart := blockIdx * blockSize
+
+		for i, padSize := 0, blockSize-1; i < blockSize; i, padSize = i+1, padSize-1 {
+			// could cache cipherTexts for padSizes of [0,blockSize) instead of recreating for each block
+			input := make([]byte, padSize)
+			cipherText := encrypter(input)
+
+			knownPad := append(input, revealedBytes...)
+			knownTargetStart := len(knownPad) - (blockSize - 1)
+			known := knownPad[knownTargetStart : knownTargetStart+blockSize-1]
+
+			target := cipherText[blockStart : blockStart+blockSize]
+
+			discoveredChar, err := bruteTrailingECBByte(encrypter, known, target)
+			if err != nil {
+				// no match found due to final byte in `known` changing as a result of difference in size of padding
+				return revealedBytes[:len(revealedBytes)-1]
+			}
+
+			revealedBytes = append(revealedBytes, discoveredChar)
 		}
 	}
 
-	return 0
+	return revealedBytes
+}
+
+func bruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) (byte, error) {
+
+	blockStart := (len(known) / 16) * 16
+
+	for c := uint8(0); c <= 254; c++ {
+		testCase := append(known, c)
+		out := encrypter(testCase)
+
+		if compare(out[blockStart:blockStart+16], target) {
+			return c, nil
+		}
+	}
+
+	return 0, fmt.Errorf("failed to brute ECB block, known: %v, target: %v", known, target)
 }
 
 func compare(s1 []byte, s2 []byte) bool {
@@ -236,4 +273,12 @@ func compare(s1 []byte, s2 []byte) bool {
 	}
 
 	return true
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
 }
