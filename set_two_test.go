@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"testing"
 
@@ -134,5 +135,38 @@ func TestProblemTwelve(t *testing.T) {
 
 	if got := string(cracker.CrackAppendedECB(crypter, blockSize)); want != got {
 		t.Errorf("want: %v, got: %v", want, got)
+	}
+}
+
+// 2.13 ECB cut-and-paste
+func TestProblemThirteen(t *testing.T) {
+	encrypter, decrypter := ECBPair()
+
+	// Ten character email address fills out the first block and lets the second block just be...
+	emailBlockPad := []byte("aa@bar.com")
+
+	// ... a "pre-PKCS#7 padded" block that just says "admin"
+	adminDummy := []byte{97, 100, 109, 105, 110, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11}
+
+	evilEmail := string(append(emailBlockPad, adminDummy...))
+
+	testProfile := profileFor(evilEmail)
+
+	// Extract the second block that just says "admin"
+	adminBlock := encrypter([]byte(testProfile.toCookie()))[16:32]
+
+	// Thirteen character email allows the third block of the ciphertext to just be the user's role
+	attackerEmail := "josh@evil.com"
+	attackerProfile := profileFor(attackerEmail)
+
+	cryptedAttackerCookie := encrypter([]byte(attackerProfile.toCookie()))
+
+	// Stitch our crafted "admin" block onto the first two blocks
+	frankenCiphertext := append(cryptedAttackerCookie[:32], adminBlock...)
+
+	want := fmt.Sprintf("email=%s&uid=10&role=admin", attackerEmail)
+
+	if got := string(decrypter(frankenCiphertext)); got != want {
+		t.Errorf("want: %s, got: %s", want, got)
 	}
 }

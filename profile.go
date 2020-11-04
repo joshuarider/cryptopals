@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type profile struct {
 	email string
@@ -21,5 +24,8 @@ func newProfile(email string, uid int, role string) profile {
 }
 
 func profileFor(email string) profile {
+	email = strings.ReplaceAll(email, "&", "")
+	email = strings.ReplaceAll(email, "=", "")
+
 	return newProfile(email, 10, "user")
 }

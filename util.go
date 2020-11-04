@@ -44,6 +44,27 @@ func mysteryEncrypter() (func([]byte) []byte, string) {
 	}, "CBC"
 }
 
+func ECBEncrypter(key []byte) func([]byte) []byte {
+	return func(plaintext []byte) []byte {
+		return crypto.ECBEncryptAES(plaintext, key)
+	}
+}
+
+func ECBDecrypter(key []byte) func([]byte) []byte {
+	return func(ciphertext []byte) []byte {
+		return crypto.ECBDecryptAES(ciphertext, key)
+	}
+}
+
+func ECBPair() (e, d func([]byte) []byte) {
+	aesKey := randomBytes(16)
+
+	e = ECBEncrypter(aesKey)
+	d = ECBDecrypter(aesKey)
+
+	return
+}
+
 func appendingECBEncrypter(suffix []byte) func([]byte) []byte {
 	aesKey := randomBytes(16)
 
