@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/joshuarider/cryptopals/crypto"
-	"github.com/joshuarider/cryptopals/encoding"
 )
 
 func init() {
@@ -16,6 +14,7 @@ func init() {
 func randomBytes(n int) []byte {
 	bytes := make([]byte, 0, n)
 
+	// TODO: use crypto/rand
 	for i := 0; i < n; i++ {
 		bytes = append(bytes, byte(rand.Intn(256)))
 	}
@@ -45,19 +44,14 @@ func mysteryEncrypter() (func([]byte) []byte, string) {
 	}, "CBC"
 }
 
-func appendingECBEncrypter() (func([]byte) []byte, error) {
+func appendingECBEncrypter(suffix []byte) func([]byte) []byte {
 	aesKey := randomBytes(16)
-	suffix, err := encoding.B64ToBytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
-
-	if err != nil {
-		return nil, fmt.Errorf("couldn't decode B64ToBytes %v", err)
-	}
 
 	return func(plaintext []byte) []byte {
 		fullText := append(plaintext, suffix...)
 
 		return crypto.ECBEncryptAES(fullText, aesKey)
-	}, nil
+	}
 }
 
 func findBlockSize(encrypter func([]byte) []byte) int {
