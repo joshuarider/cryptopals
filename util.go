@@ -66,10 +66,15 @@ func ECBPair() (e, d func([]byte) []byte) {
 }
 
 func appendingECBEncrypter(suffix []byte) func([]byte) []byte {
+	return surroundingECBEncrypter([]byte{}, suffix)
+}
+
+func surroundingECBEncrypter(prefix []byte, suffix []byte) func([]byte) []byte {
 	aesKey := randomBytes(16)
 
 	return func(plaintext []byte) []byte {
-		fullText := append(plaintext, suffix...)
+		fullText := append(prefix, plaintext...)
+		fullText = append(fullText, suffix...)
 
 		return crypto.ECBEncryptAES(fullText, aesKey)
 	}

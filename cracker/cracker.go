@@ -245,8 +245,25 @@ func CrackAppendedECB(encrypter func([]byte) []byte, blockSize int) []byte {
 	return revealedBytes
 }
 
-func bruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) (byte, error) {
+func CrackSurroundedECB(encrypter func([]byte) []byte, bs int) []byte {
+	testPadSize := bs * 3
+	testBlock := make([]byte, testPadSize)
 
+	for i := 0; i < testPadSize; i++ {
+		testBlock[i] = byte(0x41)
+	}
+
+	encryptedTest := encrypter(testBlock)
+
+	for compare(encryptedTest[bs:bs*2], encryptedTest[bs*2:bs*3]) {
+		testBlock = testBlock[:len(testBlock)-1]
+		encryptedTest = encrypter(testBlock)
+	}
+
+	prefixPadSize := len(testBlock) - (2 * bs) + 1
+}
+
+func bruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) (byte, error) {
 	blockStart := (len(known) / 16) * 16
 
 	for c := uint8(0); c <= 254; c++ {

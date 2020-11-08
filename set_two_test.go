@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 
@@ -168,5 +169,23 @@ func TestProblemThirteen(t *testing.T) {
 
 	if got := string(decrypter(frankenCiphertext)); got != want {
 		t.Errorf("want: %s, got: %s", want, got)
+	}
+}
+
+// 2.14 Byte-at-a-time ECB decryption (Harder)
+func TestProblemFourteen(t *testing.T) {
+	prefix := randomBytes(rand.Intn(6) + 5)
+	suffix, err := encoding.B64ToBytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
+
+	if err != nil {
+		t.Fatalf("couldn't decode B64ToBytes %v", err)
+	}
+
+	encrypter := surroundingECBEncrypter(prefix, suffix)
+
+	want := string(suffix)
+
+	if got := string(cracker.CrackSurroundedECB(encrypter, 16)); want != got {
+		t.Errorf("want: %v, got: %v", want, got)
 	}
 }
