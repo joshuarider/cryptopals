@@ -189,3 +189,56 @@ func TestProblemFourteen(t *testing.T) {
 		t.Errorf("want: %v, got: %v", want, got)
 	}
 }
+
+// 2.15 PKCS#7 Padding Validation
+func TestProblemFiften(t *testing.T) {
+	padTable := []struct {
+		blockSize int
+		input     string
+		want      bool
+	}{{
+		blockSize: 10,
+		input:     "YELLOW\x04\x04\x04\x04",
+		want:      true,
+	}, {
+		blockSize: 13,
+		input:     "YELLOW SUBMA\x01",
+		want:      true,
+	}, {
+		blockSize: 16,
+		input:     "YELLOW SUBMARINE",
+		want:      true,
+	}, {
+		blockSize: 16,
+		input:     "YELLOW SUBMARINEYELLOW SUBMARINE",
+		want:      true,
+	}, {
+		blockSize: 9,
+		input:     "YELLOW SUBMARINE\x02\x02",
+		want:      true,
+	}, {
+		blockSize: 16,
+		input:     "YELLOW SUBMARIN\x02\x02",
+		want:      false,
+	}, {
+		blockSize: 16,
+		input:     "YELLOW SUB",
+		want:      false,
+	}, {
+		blockSize: 16,
+		input:     "YELLOW SUBMARINE\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10",
+		want:      true,
+	}, {
+		blockSize: 16,
+		input:     "",
+		want:      true, // this may be incorrect
+	}}
+
+	for _, test := range padTable {
+		got := crypto.ValidatePKCS7Padding([]byte(test.input), test.blockSize)
+
+		if test.want != got {
+			t.Errorf("Pad error for %v: want = %v, got = %v", test.input, test.want, got)
+		}
+	}
+}
