@@ -226,13 +226,12 @@ func CrackAppendedECB(encrypter func([]byte) []byte, blockSize int) []byte {
 			input := make([]byte, padSize)
 			cipherText := encrypter(input)
 
-			knownPad := append(input, revealedBytes...)
-			knownTargetStart := len(knownPad) - (blockSize - 1)
-			known := knownPad[knownTargetStart : knownTargetStart+blockSize-1]
+			known := append(input, revealedBytes...)
+			known = known[len(known)-(blockSize-1):]
 
 			target := cipherText[blockStart : blockStart+blockSize]
 
-			discoveredChar, err := bruteTrailingECBByte(encrypter, known, target)
+			discoveredChar, err := bruteTrailingECBByte(encrypter, blockSize, known, target)
 			if err != nil {
 				// no match found due to final byte in `known` changing as a result of difference in size of padding
 				return revealedBytes[:len(revealedBytes)-1]
@@ -246,12 +245,43 @@ func CrackAppendedECB(encrypter func([]byte) []byte, blockSize int) []byte {
 }
 
 func CrackSurroundedECB(encrypter func([]byte) []byte, bs int) []byte {
+	prefixPadSize := findPrefixPadSize(encrypter, bs)
+
+	suffixSize := len(encrypter([]byte{})) - (bs - prefixPadSize)
+
+	revealedBytes := []byte{}
+
+	// Start on second block. Block 0 is prefix plus our padding
+	for blockIdx := 1; len(revealedBytes) < suffixSize; blockIdx++ {
+		blockStart := blockIdx * bs
+
+		for i, padSize := 0, bs-1+prefixPadSize; i < bs; i, padSize = i+1, padSize-1 {
+			// TODO fix duplication between this and CrackAppendedECB
+			input := make([]byte, padSize)
+			cipherText := encrypter(input)
+
+			known := append(input, revealedBytes...)
+			known = known[len(known)-(bs-1):]
+
+			target := cipherText[blockStart : blockStart+bs]
+
+			discoveredChar, err := bruteTrailingECBByteWithPrefix(encrypter, bs, prefixPadSize, known, target)
+			if err != nil {
+				// no match found due to final byte in `known` changing as a result of difference in size of padding
+				return revealedBytes[:len(revealedBytes)-1]
+			}
+
+			revealedBytes = append(revealedBytes, discoveredChar)
+		}
+	}
+
+	return revealedBytes
+}
+
+// Finds blockSize minus len(encrypter's prefix)
+func findPrefixPadSize(encrypter func([]byte) []byte, bs int) int {
 	testPadSize := bs * 3
 	testBlock := make([]byte, testPadSize)
-
-	for i := 0; i < testPadSize; i++ {
-		testBlock[i] = byte(0x41)
-	}
 
 	encryptedTest := encrypter(testBlock)
 
@@ -260,17 +290,32 @@ func CrackSurroundedECB(encrypter func([]byte) []byte, bs int) []byte {
 		encryptedTest = encrypter(testBlock)
 	}
 
-	prefixPadSize := len(testBlock) - (2 * bs) + 1
+	return len(testBlock) + 1 - (2 * bs)
 }
 
-func bruteTrailingECBByte(encrypter func([]byte) []byte, known []byte, target []byte) (byte, error) {
-	blockStart := (len(known) / 16) * 16
-
+func bruteTrailingECBByte(encrypter func([]byte) []byte, bs int, known []byte, target []byte) (byte, error) {
 	for c := uint8(0); c <= 254; c++ {
 		testCase := append(known, c)
 		out := encrypter(testCase)
 
-		if compare(out[blockStart:blockStart+16], target) {
+		if compare(out[:bs], target) {
+			return c, nil
+		}
+	}
+
+	return 0, fmt.Errorf("failed to brute ECB block, known: %v, target: %v", known, target)
+}
+
+func bruteTrailingECBByteWithPrefix(encrypter func([]byte) []byte, bs int, prefixPadSize int, known []byte, target []byte) (byte, error) {
+	base := make([]byte, prefixPadSize)
+	base = append(base, known...)
+	for c := uint8(0); c <= 254; c++ {
+		testCase := append(base, c)
+		out := encrypter(testCase)
+
+		// TODO unify this with bruteTrailingECBByte
+		// we get away with this because we know prefix is always smaller than a block
+		if compare(out[bs:bs+bs], target) {
 			return c, nil
 		}
 	}
