@@ -233,6 +233,7 @@ func TestProblemFifteen(t *testing.T) {
 
 // 2.16 CBC bitflipping attack
 func TestProblemSixteen(t *testing.T) {
-	//e, d := crypto.CBCPair()
-
+	e, d := cookieStringCBCPair()
+	c := e("arbitrarytextonitswayin")
+	fmt.Println(d(c))
 }

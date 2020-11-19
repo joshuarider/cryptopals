@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"strings"
 
 	"github.com/joshuarider/cryptopals/crypto"
 )
@@ -58,4 +59,29 @@ func surroundingECBEncrypter(prefix []byte, suffix []byte) func([]byte) []byte {
 
 		return crypto.ECBEncryptAES(fullText, aesKey)
 	}
+}
+
+// Problem 16
+func cookieStringCBCEncrypter(encrypter func([]byte) []byte) func(string) []byte {
+	prefix := "comment1=cooking%20MCs;userdata="
+	suffix := ";comment2=%20like%20a%20pound%20of%20bacon"
+
+	return func(s string) []byte {
+		sanitizedString := strings.ReplaceAll(s, ";", "")
+		sanitizedString = strings.ReplaceAll(s, "=", "")
+
+		return encrypter([]byte(prefix + sanitizedString + suffix))
+	}
+}
+
+func cookieStringCBCDecrypter(decrypter func([]byte) []byte) func([]byte) string {
+	return func(c []byte) string {
+		return string(decrypter(c))
+	}
+}
+
+func cookieStringCBCPair() (func(string) []byte, func([]byte) string) {
+	e, d := crypto.CBCPair()
+
+	return cookieStringCBCEncrypter(e), cookieStringCBCDecrypter(d)
 }
