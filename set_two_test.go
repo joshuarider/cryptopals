@@ -212,6 +212,12 @@ func TestProblemFiften(t *testing.T) {
 		input: "YELLOW SUBMARINE\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10",
 		want:  true,
 	}, {
+		input: "YELLOW SUBMARINE\x04\x04\x04",
+		want:  false,
+	}, {
+		input: "YELLOW SUBMARINE\x00\x01\x02\x03",
+		want:  false,
+	}, {
 		input: "",
 		want:  true, // this may be incorrect
 	}}
