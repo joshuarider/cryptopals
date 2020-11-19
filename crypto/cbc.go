@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/aes"
 
+	"github.com/joshuarider/cryptopals/crypto/padding"
 	"github.com/joshuarider/cryptopals/encoding"
 )
 
@@ -21,13 +22,13 @@ func CBCDecryptAES(cipherText []byte, key []byte, iv []byte) []byte {
 		iv = cipherText[bs:be]
 	}
 
-	return PKCSUnpad(plainText)
+	return padding.PKCS7Unpad(plainText)
 }
 
 func CBCEncryptAES(plainText []byte, key []byte, iv []byte) []byte {
 	blockSize := len(iv)
 
-	paddedText := PKCSPad(plainText, blockSize)
+	paddedText := padding.PKCS7Pad(plainText, blockSize)
 	cipherText := make([]byte, 0, len(paddedText))
 
 	cipher, _ := aes.NewCipher(key)

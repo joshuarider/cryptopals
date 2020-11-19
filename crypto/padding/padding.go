@@ -1,6 +1,6 @@
-package crypto
+package padding
 
-func PKCSPad(chunk []byte, targetLength int) []byte {
+func PKCS7Pad(chunk []byte, targetLength int) []byte {
 	overhang := len(chunk) % targetLength
 
 	if overhang == 0 {
@@ -16,7 +16,7 @@ func PKCSPad(chunk []byte, targetLength int) []byte {
 	return chunk
 }
 
-func PKCSUnpad(text []byte) []byte {
+func PKCS7Unpad(text []byte) []byte {
 	length := len(text)
 	if length == 0 {
 		return text
@@ -39,28 +39,22 @@ func PKCSUnpad(text []byte) []byte {
 	return text[:speculatedPadStart]
 }
 
-func ValidatePKCS7Padding(text []byte, blockSize int) bool {
+func IsValidPKCS7(text []byte) bool {
 	length := len(text)
 	if length == 0 {
 		return true
 	}
 
-	if length%blockSize != 0 {
+	lastByte := int(text[length-1])
+
+	if lastByte > length {
 		return false
 	}
 
-	lastByte := int(text[length-1])
+	speculatedPadStart := length - lastByte
 
-	if lastByte >= blockSize {
-		return true
-	}
-
-	lastBlock := text[len(text)-blockSize:]
-
-	speculatedPadStart := blockSize - lastByte
-
-	for i := speculatedPadStart; i < blockSize-1; i++ {
-		if lastBlock[blockSize-1] != lastBlock[i] {
+	for i := speculatedPadStart; i < length-1; i++ {
+		if text[length-1] != text[i] {
 			return false
 		}
 	}

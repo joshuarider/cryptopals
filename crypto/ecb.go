@@ -1,6 +1,10 @@
 package crypto
 
-import "crypto/aes"
+import (
+	"crypto/aes"
+
+	"github.com/joshuarider/cryptopals/crypto/padding"
+)
 
 func ECBDecryptAES(cipherText []byte, key []byte) []byte {
 	plainText := make([]byte, len(cipherText))
@@ -11,12 +15,12 @@ func ECBDecryptAES(cipherText []byte, key []byte) []byte {
 		cipher.Decrypt(plainText[bs:be], cipherText[bs:be])
 	}
 
-	return PKCSUnpad(plainText)
+	return padding.PKCS7Unpad(plainText)
 }
 
 func ECBEncryptAES(plainText []byte, key []byte) []byte {
 	blockSize := 16
-	paddedText := PKCSPad(plainText, blockSize)
+	paddedText := padding.PKCS7Pad(plainText, blockSize)
 	cipherText := make([]byte, len(paddedText))
 	cipher, _ := aes.NewCipher(key)
 

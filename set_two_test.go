@@ -9,6 +9,7 @@ import (
 
 	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
+	"github.com/joshuarider/cryptopals/crypto/padding"
 	"github.com/joshuarider/cryptopals/encoding"
 )
 
@@ -37,7 +38,7 @@ func TestProblemNine(t *testing.T) {
 	}}
 
 	for _, test := range padTable {
-		got := string(crypto.PKCSPad(testSubmarine, test.size))
+		got := string(padding.PKCS7Pad(testSubmarine, test.size))
 
 		if test.want != got {
 			t.Errorf("Pad error: want = %v, got = %v", test.want, got)
@@ -59,7 +60,7 @@ func TestProblemNine(t *testing.T) {
 	}}
 
 	for _, test := range unpadTable {
-		got := string(crypto.PKCSUnpad([]byte(test.input)))
+		got := string(padding.PKCS7Unpad([]byte(test.input)))
 
 		if test.want != got {
 			t.Errorf("Unpad error: want = %v, got = %v", test.want, got)
@@ -193,49 +194,30 @@ func TestProblemFourteen(t *testing.T) {
 // 2.15 PKCS#7 Padding Validation
 func TestProblemFiften(t *testing.T) {
 	padTable := []struct {
-		blockSize int
-		input     string
-		want      bool
+		input string
+		want  bool
 	}{{
-		blockSize: 10,
-		input:     "YELLOW\x04\x04\x04\x04",
-		want:      true,
+		input: "YELLOW\x04\x04\x04\x04",
+		want:  true,
 	}, {
-		blockSize: 13,
-		input:     "YELLOW SUBMA\x01",
-		want:      true,
+		input: "YELLOW SUBMA\x01",
+		want:  true,
 	}, {
-		blockSize: 16,
-		input:     "YELLOW SUBMARINE",
-		want:      true,
+		input: "YELLOW SUBMARINE",
+		want:  false,
 	}, {
-		blockSize: 16,
-		input:     "YELLOW SUBMARINEYELLOW SUBMARINE",
-		want:      true,
+		input: "YELLOW SUBMARINE\x02\x02",
+		want:  true,
 	}, {
-		blockSize: 9,
-		input:     "YELLOW SUBMARINE\x02\x02",
-		want:      true,
+		input: "YELLOW SUBMARINE\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10",
+		want:  true,
 	}, {
-		blockSize: 16,
-		input:     "YELLOW SUBMARIN\x02\x02",
-		want:      false,
-	}, {
-		blockSize: 16,
-		input:     "YELLOW SUB",
-		want:      false,
-	}, {
-		blockSize: 16,
-		input:     "YELLOW SUBMARINE\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10",
-		want:      true,
-	}, {
-		blockSize: 16,
-		input:     "",
-		want:      true, // this may be incorrect
+		input: "",
+		want:  true, // this may be incorrect
 	}}
 
 	for _, test := range padTable {
-		got := crypto.ValidatePKCS7Padding([]byte(test.input), test.blockSize)
+		got := padding.IsValidPKCS7([]byte(test.input))
 
 		if test.want != got {
 			t.Errorf("Pad error for %v: want = %v, got = %v", test.input, test.want, got)
