@@ -30,3 +30,24 @@ func ECBEncryptAES(plainText []byte, key []byte) []byte {
 
 	return cipherText
 }
+
+func ECBEncrypter(key []byte) func([]byte) []byte {
+	return func(plaintext []byte) []byte {
+		return ECBEncryptAES(plaintext, key)
+	}
+}
+
+func ECBDecrypter(key []byte) func([]byte) []byte {
+	return func(ciphertext []byte) []byte {
+		return ECBDecryptAES(ciphertext, key)
+	}
+}
+
+func ECBPair() (e, d func([]byte) []byte) {
+	aesKey := RandomBytes(16)
+
+	e = ECBEncrypter(aesKey)
+	d = ECBDecrypter(aesKey)
+
+	return
+}

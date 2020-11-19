@@ -142,7 +142,7 @@ func TestProblemTwelve(t *testing.T) {
 
 // 2.13 ECB cut-and-paste
 func TestProblemThirteen(t *testing.T) {
-	encrypter, decrypter := ECBPair()
+	encrypter, decrypter := crypto.ECBPair()
 
 	// Ten character email address fills out the first block and lets the second block just be...
 	emailBlockPad := []byte("aa@bar.com")
@@ -175,7 +175,7 @@ func TestProblemThirteen(t *testing.T) {
 
 // 2.14 Byte-at-a-time ECB decryption (Harder)
 func TestProblemFourteen(t *testing.T) {
-	prefix := randomBytes(rand.Intn(6) + 5)
+	prefix := crypto.RandomBytes(rand.Intn(6) + 5)
 	suffix, err := encoding.B64ToBytes("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
 
 	if err != nil {
@@ -191,7 +191,7 @@ func TestProblemFourteen(t *testing.T) {
 	}
 }
 
-// 2.15 PKCS#7 Padding Validation
+// 2.15 PKCS#7 padding validation
 func TestProblemFiften(t *testing.T) {
 	padTable := []struct {
 		input string
@@ -230,3 +230,5 @@ func TestProblemFiften(t *testing.T) {
 		}
 	}
 }
+
+// 2.16 CBC bitflipping attack
