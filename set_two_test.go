@@ -192,7 +192,7 @@ func TestProblemFourteen(t *testing.T) {
 }
 
 // 2.15 PKCS#7 padding validation
-func TestProblemFiften(t *testing.T) {
+func TestProblemFifteen(t *testing.T) {
 	padTable := []struct {
 		input string
 		want  bool
@@ -232,3 +232,7 @@ func TestProblemFiften(t *testing.T) {
 }
 
 // 2.16 CBC bitflipping attack
+func TestProblemSixteen(t *testing.T) {
+	//e, d := crypto.CBCPair()
+
+}
