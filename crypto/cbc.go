@@ -47,15 +47,13 @@ func CBCEncryptAES(plainText []byte, key []byte, iv []byte) []byte {
 	return cipherText
 }
 
-func CBCEncrypter(key []byte) func([]byte) []byte {
-	iv := make([]byte, 16)
+func CBCEncrypter(key []byte, iv []byte) func([]byte) []byte {
 	return func(plaintext []byte) []byte {
 		return CBCEncryptAES(plaintext, key, iv)
 	}
 }
 
-func CBCDecrypter(key []byte) func([]byte) []byte {
-	iv := make([]byte, 16)
+func CBCDecrypter(key []byte, iv []byte) func([]byte) []byte {
 	return func(ciphertext []byte) []byte {
 		return CBCDecryptAES(ciphertext, key, iv)
 	}
@@ -63,9 +61,10 @@ func CBCDecrypter(key []byte) func([]byte) []byte {
 
 func CBCPair() (e, d func([]byte) []byte) {
 	aesKey := RandomBytes(16)
+	iv := make([]byte, 16)
 
-	e = CBCEncrypter(aesKey)
-	d = CBCDecrypter(aesKey)
+	e = CBCEncrypter(aesKey, iv)
+	d = CBCDecrypter(aesKey, iv)
 
 	return
 }

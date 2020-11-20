@@ -85,3 +85,12 @@ func cookieStringCBCPair() (func(string) []byte, func([]byte) string) {
 
 	return cookieStringCBCEncrypter(e), cookieStringCBCDecrypter(d)
 }
+
+func hasAdminClaim(cookie string) bool {
+	for _, clause := range strings.Split(cookie, ";") {
+		if strings.Compare("admin=true", clause) == 0 {
+			return true
+		}
+	}
+	return false
+}

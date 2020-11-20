@@ -218,6 +218,9 @@ func TestProblemFifteen(t *testing.T) {
 		input: "YELLOW SUBMARINE\x00\x01\x02\x03",
 		want:  false,
 	}, {
+		input: "YELLOW SUBMARINE\x04\x04\x03\x04",
+		want:  false,
+	}, {
 		input: "",
 		want:  true, // this may be incorrect
 	}}
@@ -234,6 +237,21 @@ func TestProblemFifteen(t *testing.T) {
 // 2.16 CBC bitflipping attack
 func TestProblemSixteen(t *testing.T) {
 	e, d := cookieStringCBCPair()
-	c := e("arbitrarytextonitswayin")
-	fmt.Println(d(c))
+
+	// fill out all of third block for `userdata`
+	ciphertext := e("YELLOW SUBMARINE")
+
+	knownSuffixBlock := []byte(";comment2=%20lik")
+	desiredSuffixBlock := []byte(";admin=true;foo=")
+	desiredDiff := encoding.XorBytes(knownSuffixBlock, desiredSuffixBlock)
+
+	evilUserdata := encoding.XorBytes(ciphertext[32:48], desiredDiff)
+
+	// replace userdata with our evil block
+	evilCiphertext := append(ciphertext[:32], evilUserdata...)
+	evilCiphertext = append(evilCiphertext, ciphertext[48:]...)
+
+	if plaintext := d(evilCiphertext); !hasAdminClaim(plaintext) {
+		t.Errorf("cookie string did not contain admin clause: %s", plaintext)
+	}
 }
