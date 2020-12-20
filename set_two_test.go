@@ -10,6 +10,7 @@ import (
 	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
 	"github.com/joshuarider/cryptopals/crypto/padding"
+	"github.com/joshuarider/cryptopals/crypto/xor"
 	"github.com/joshuarider/cryptopals/encoding"
 )
 
@@ -243,9 +244,9 @@ func TestProblemSixteen(t *testing.T) {
 
 	knownSuffixBlock := []byte(";comment2=%20lik")
 	desiredSuffixBlock := []byte(";admin=true;foo=")
-	desiredDiff := encoding.XorBytes(knownSuffixBlock, desiredSuffixBlock)
+	desiredDiff := xor.Bytes(knownSuffixBlock, desiredSuffixBlock)
 
-	evilUserdata := encoding.XorBytes(ciphertext[32:48], desiredDiff)
+	evilUserdata := xor.Bytes(ciphertext[32:48], desiredDiff)
 
 	// replace userdata with our evil block
 	evilCiphertext := append(ciphertext[:32], evilUserdata...)

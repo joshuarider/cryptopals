@@ -9,6 +9,7 @@ import (
 
 	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
+	"github.com/joshuarider/cryptopals/crypto/xor"
 	"github.com/joshuarider/cryptopals/encoding"
 )
 
@@ -112,7 +113,7 @@ func TestProblemTwo(t *testing.T) {
 	in2 := "686974207468652062756c6c277320657965"
 	want := "746865206b696420646f6e277420706c6179"
 
-	if got := encoding.XorHex(in1, in2); want != got {
+	if got := xor.Hex(in1, in2); want != got {
 		t.Errorf("want= %s, got = %s", want, got)
 	}
 }
@@ -127,11 +128,11 @@ func TestProblemThree(t *testing.T) {
 		t.Fatalf("Error calling HexToBytes(%s)", in)
 	}
 
-	cleartext := encoding.XorSingleByte(raw, uint8(1))
+	cleartext := xor.SingleByte(raw, uint8(1))
 	bestScore := cracker.Score(cleartext)
 
 	for i := uint8(2); i <= uint8(200); i++ {
-		candidate := encoding.XorSingleByte(raw, i)
+		candidate := xor.SingleByte(raw, i)
 		if s := cracker.Score(candidate); s > bestScore {
 			bestScore = s
 			cleartext = candidate
@@ -166,7 +167,7 @@ func TestProblemFour(t *testing.T) {
 				continue
 			}
 
-			candidate := encoding.XorSingleByte(raw, i)
+			candidate := xor.SingleByte(raw, i)
 			score := cracker.Score(candidate)
 			hits = append(hits, ScoreResult{Score: score, Line: candidate})
 		}
@@ -189,7 +190,7 @@ func TestProblemFive(t *testing.T) {
 	want := "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
 	in := []byte("Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal")
 
-	out := encoding.RepeatedKeyXor(in, []byte("ICE"))
+	out := xor.RepeatedKey(in, []byte("ICE"))
 	got := encoding.BytesToHex(out)
 
 	if want != got {

@@ -4,7 +4,7 @@ import (
 	"container/heap"
 	"fmt"
 
-	"github.com/joshuarider/cryptopals/encoding"
+	"github.com/joshuarider/cryptopals/crypto/xor"
 )
 
 func Score(candidate []byte) float64 {
@@ -55,7 +55,7 @@ func BestGuess(b []byte) byte {
 	sr := &Scores{}
 
 	for i := uint8(1); i < 255; i++ {
-		candidate := encoding.XorSingleByte(b, i)
+		candidate := xor.SingleByte(b, i)
 		heap.Push(sr, Candidate{Score: Score(candidate), Letter: i})
 	}
 

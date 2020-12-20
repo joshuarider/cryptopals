@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 
 	"github.com/joshuarider/cryptopals/crypto/padding"
-	"github.com/joshuarider/cryptopals/encoding"
+	"github.com/joshuarider/cryptopals/crypto/xor"
 )
 
 func CBCDecryptAES(cipherText []byte, key []byte, iv []byte) []byte {
@@ -18,7 +18,7 @@ func CBCDecryptAES(cipherText []byte, key []byte, iv []byte) []byte {
 	for bs, be := 0, blockSize; bs < len(cipherText); bs, be = bs+blockSize, be+blockSize {
 		cipher.Decrypt(plainBlock, cipherText[bs:be])
 
-		plainText = append(plainText, encoding.XorBytes(iv, plainBlock)...)
+		plainText = append(plainText, xor.Bytes(iv, plainBlock)...)
 		iv = cipherText[bs:be]
 	}
 
@@ -37,7 +37,7 @@ func CBCEncryptAES(plainText []byte, key []byte, iv []byte) []byte {
 	for bs, be := 0, blockSize; bs < len(paddedText); bs, be = bs+blockSize, be+blockSize {
 		block := paddedText[bs:be]
 
-		cipher.Encrypt(encryptedChunk, encoding.XorBytes(iv, block))
+		cipher.Encrypt(encryptedChunk, xor.Bytes(iv, block))
 
 		cipherText = append(cipherText, encryptedChunk...)
 
