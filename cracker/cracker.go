@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/joshuarider/cryptopals/crypto/xor"
+	"github.com/joshuarider/cryptopals/util"
 )
 
 func Score(candidate []byte) float64 {
@@ -171,7 +172,7 @@ func findPrefixPadSize(encrypter func([]byte) []byte, bs int) int {
 
 	encryptedTest := encrypter(testBlock)
 
-	for compare(encryptedTest[bs:bs*2], encryptedTest[bs*2:bs*3]) {
+	for util.Compare(encryptedTest[bs:bs*2], encryptedTest[bs*2:bs*3]) {
 		testBlock = testBlock[:len(testBlock)-1]
 		encryptedTest = encrypter(testBlock)
 	}
@@ -184,7 +185,7 @@ func bruteTrailingECBByte(encrypter func([]byte) []byte, bs int, known []byte, t
 		testCase := append(known, c)
 		out := encrypter(testCase)
 
-		if compare(out[:bs], target) {
+		if util.Compare(out[:bs], target) {
 			return c, nil
 		}
 	}
@@ -201,32 +202,10 @@ func bruteTrailingECBByteWithPrefix(encrypter func([]byte) []byte, bs int, prefi
 
 		// TODO unify this with bruteTrailingECBByte
 		// we get away with this because we know prefix is always smaller than a block
-		if compare(out[bs:bs+bs], target) {
+		if util.Compare(out[bs:bs+bs], target) {
 			return c, nil
 		}
 	}
 
 	return 0, fmt.Errorf("failed to brute ECB block, known: %v, target: %v", known, target)
-}
-
-func compare(s1 []byte, s2 []byte) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
-
-	for i := 0; i < len(s1); i++ {
-		if s1[i] != s2[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
-func min(a int, b int) int {
-	if a < b {
-		return a
-	}
-
-	return b
 }

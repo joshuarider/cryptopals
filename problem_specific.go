@@ -101,7 +101,7 @@ func hasAdminClaim(cookie string) bool {
 }
 
 // Problem 17
-func encryptForCBCOracle() ([]byte, cipher.Block, []byte) {
+func encryptForCBCOracle() ([]byte, cipher.Block, []byte, []byte) {
 	targets := []string{
 		"MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=",
 		"MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=",
@@ -115,15 +115,14 @@ func encryptForCBCOracle() ([]byte, cipher.Block, []byte) {
 		"MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93",
 	}
 
-	// TODO: choose target at random, return plaintext target?
-	plaintext, _ := encoding.B64ToBytes(targets[8])
+	plaintext, _ := encoding.B64ToBytes(targets[rand.Intn(len(targets))])
 	paddedText := padding.PKCS7Pad(plaintext, 16)
 	cipher, _ := aes.NewCipher(crypto.RandomBytes(16))
 	iv := crypto.RandomBytes(16)
 
 	ciphertext := crypto.CBCEncryptPadded(paddedText, cipher, iv)
 
-	return ciphertext, cipher, iv
+	return ciphertext, cipher, iv, plaintext
 }
 
 func paddingOracleCheck(ciphertext []byte, cipher cipher.Block, iv []byte) bool {
@@ -132,14 +131,19 @@ func paddingOracleCheck(ciphertext []byte, cipher cipher.Block, iv []byte) bool 
 	return padding.IsValidPKCS7(plaintext)
 }
 
-func bruteByte(target []byte, cipher cipher.Block, preppedPad []byte) byte {
-	preStub := make([]uint8, 15-len(preppedPad))
+func bruteByte(target []byte, cipher cipher.Block, ivStub []byte) byte {
+	preStub := make([]uint8, 16-len(ivStub))
+	evilIv := append(preStub, ivStub...)
+	targetIdx := len(preStub) - 1
 
 	for i := uint8(0); ; i++ {
-		c := append(preStub, append([]byte{i}, preppedPad...)...)
+		evilIv[targetIdx] = i
 
-		if paddingOracleCheck(target, cipher, c) {
-			return i ^ uint8(len(preppedPad)+1)
+		if paddingOracleCheck(target, cipher, evilIv) {
+			// `i ^ uint8(len(ivStub)+1)` gives us the value of the byte in the
+			// intermediate state when the ciphertext has been through the AES decrypt
+			// process, but has not yet gone through the CBC xor.
+			return i ^ uint8(len(ivStub)+1)
 		}
 
 		if i == uint8(255) {
@@ -152,24 +156,29 @@ func bruteByte(target []byte, cipher cipher.Block, preppedPad []byte) byte {
 	return 0
 }
 
-func makePad(known []byte, iv []byte) []byte {
-	subIv := iv[16-len(known):]
-	padTarget := uint8(len(known) + 1)
-	pad := make([]byte, len(known))
+func makeEvilIV(known []byte, iv []byte) []byte {
+	padStart := 16 - len(known)
+	padByte := uint8(len(known) + 1)
+	evilIV := make([]byte, len(known))
 
 	for i := range known {
-		pad[i] = subIv[i] ^ known[i] ^ padTarget
+		// `iv[i+padStart] ^ known[i]` leaves us with the byte found in the intermediate state
+		// of CBC decryption, when the AES decrypt has taken place, but the CBC xor has not.
+		// Xor-ing the intermediate byte against our desired pad byte leaves us with a value
+		// that will generate the desired pad byte when xor'd against the intermediate byte.
+		// ie. when "x ^ y = z", then "x ^ z = y"
+		evilIV[i] = iv[i+padStart] ^ known[i] ^ padByte
 	}
 
-	return pad
+	return evilIV
 }
 
 func crackCBCBlock(target []byte, cipher cipher.Block, iv []byte) []byte {
 	known := []byte{}
 
 	for i := len(iv) - 1; i >= 0; i-- {
-		pad := makePad(known, iv)
-		foundByte := bruteByte(target, cipher, pad) ^ iv[i]
+		evilIV := makeEvilIV(known, iv)
+		foundByte := bruteByte(target, cipher, evilIV) ^ iv[i]
 		known = append([]byte{foundByte}, known...)
 	}
 
