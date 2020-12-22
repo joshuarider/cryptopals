@@ -2,36 +2,47 @@ package crypto
 
 import (
 	"crypto/aes"
+	"crypto/cipher"
 
 	"github.com/joshuarider/cryptopals/crypto/padding"
 	"github.com/joshuarider/cryptopals/crypto/xor"
 )
 
-func CBCDecryptAES(cipherText []byte, key []byte, iv []byte) []byte {
-	blockSize := len(iv)
-
+func CBCDecryptAES(ciphertext []byte, key []byte, iv []byte) []byte {
 	cipher, _ := aes.NewCipher(key)
 
-	plainText := make([]byte, 0, len(cipherText))
+	plaintext := CBCDecryptPadded(ciphertext, cipher, iv)
+
+	return padding.PKCS7Unpad(plaintext)
+}
+
+func CBCDecryptPadded(ciphertext []byte, cipher cipher.Block, iv []byte) []byte {
+	blockSize := len(iv)
+	plaintext := make([]byte, 0, len(ciphertext))
 	plainBlock := make([]byte, blockSize)
 
-	for bs, be := 0, blockSize; bs < len(cipherText); bs, be = bs+blockSize, be+blockSize {
-		cipher.Decrypt(plainBlock, cipherText[bs:be])
+	for bs, be := 0, blockSize; bs < len(ciphertext); bs, be = bs+blockSize, be+blockSize {
+		cipher.Decrypt(plainBlock, ciphertext[bs:be])
 
-		plainText = append(plainText, xor.Bytes(iv, plainBlock)...)
-		iv = cipherText[bs:be]
+		plaintext = append(plaintext, xor.Bytes(iv, plainBlock)...)
+		iv = ciphertext[bs:be]
 	}
 
-	return padding.PKCS7Unpad(plainText)
+	return plaintext
 }
 
 func CBCEncryptAES(plainText []byte, key []byte, iv []byte) []byte {
 	blockSize := len(iv)
 
 	paddedText := padding.PKCS7Pad(plainText, blockSize)
+	cipher, _ := aes.NewCipher(key)
+	return CBCEncryptPadded(paddedText, cipher, iv)
+}
+
+func CBCEncryptPadded(paddedText []byte, cipher cipher.Block, iv []byte) []byte {
+	blockSize := len(iv)
 	cipherText := make([]byte, 0, len(paddedText))
 
-	cipher, _ := aes.NewCipher(key)
 	encryptedChunk := make([]byte, blockSize)
 
 	for bs, be := 0, blockSize; bs < len(paddedText); bs, be = bs+blockSize, be+blockSize {

@@ -222,6 +222,12 @@ func TestProblemFifteen(t *testing.T) {
 		input: "YELLOW SUBMARINE\x04\x04\x03\x04",
 		want:  false,
 	}, {
+		input: "YELLOW SUBMARINE\x04\x04\x04\x04\x04\x04",
+		want:  true,
+	}, {
+		input: "YELLOW SUBMARINE\x00",
+		want:  false,
+	}, {
 		input: "",
 		want:  true, // this may be incorrect
 	}}
@@ -230,7 +236,7 @@ func TestProblemFifteen(t *testing.T) {
 		got := padding.IsValidPKCS7([]byte(test.input))
 
 		if test.want != got {
-			t.Errorf("Pad error for %v: want = %v, got = %v", test.input, test.want, got)
+			t.Errorf("Pad error for %#v: want = %v, got = %v", test.input, test.want, got)
 		}
 	}
 }

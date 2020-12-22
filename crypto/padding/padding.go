@@ -51,6 +51,10 @@ func IsValidPKCS7(text []byte) bool {
 		return false
 	}
 
+	if lastByte == 0 {
+		return false
+	}
+
 	speculatedPadStart := length - lastByte
 
 	for i := speculatedPadStart; i < length-1; i++ {
