@@ -14,7 +14,11 @@ import (
 func TestProblemSeventeen(t *testing.T) {
 	ciphertext, cipher, iv, want := encryptForCBCOracle()
 	paddedCrackedText := CBCPaddingOracle(ciphertext, cipher, iv)
-	got := padding.PKCS7Unpad(paddedCrackedText)
+	got, err := padding.PKCS7Unpad(paddedCrackedText)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !util.Compare(want, got) {
 		t.Errorf("Did not find expected plaintext. want: %s, got: %s", want, got)

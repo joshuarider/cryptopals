@@ -32,7 +32,7 @@ func TestProblemNine(t *testing.T) {
 		want: "YELLOW SUBMARINE\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
 	}, {
 		size: 16,
-		want: "YELLOW SUBMARINE",
+		want: "YELLOW SUBMARINE\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10",
 	}, {
 		size: 18,
 		want: "YELLOW SUBMARINE\x02\x02",
@@ -47,23 +47,34 @@ func TestProblemNine(t *testing.T) {
 	}
 
 	unpadTable := []struct {
-		input string
-		want  string
+		input    string
+		want     string
+		want_err bool
 	}{{
-		input: "\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f",
-		want:  "",
+		input:    "\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f",
+		want:     "",
+		want_err: false,
 	}, {
-		input: "\x01",
-		want:  "",
+		input:    "\x01",
+		want:     "",
+		want_err: false,
 	}, {
-		input: "A potential false alarm\x02",
-		want:  "A potential false alarm\x02",
+		input:    "A potential false alarm\x02",
+		want:     "A potential false alarm\x02",
+		want_err: true,
 	}}
 
 	for _, test := range unpadTable {
-		got := string(padding.PKCS7Unpad([]byte(test.input)))
+		got, err := padding.PKCS7Unpad([]byte(test.input))
 
-		if test.want != got {
+		if err != nil {
+			if !test.want_err {
+				t.Errorf("Got unexpected unpadding error for input: %#v", test.input)
+			}
+			continue
+		}
+
+		if test.want != string(got) {
 			t.Errorf("Unpad error: want = %v, got = %v", test.want, got)
 		}
 	}
@@ -229,7 +240,7 @@ func TestProblemFifteen(t *testing.T) {
 		want:  false,
 	}, {
 		input: "",
-		want:  true, // this may be incorrect
+		want:  false,
 	}}
 
 	for _, test := range padTable {

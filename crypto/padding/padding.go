@@ -1,11 +1,9 @@
 package padding
 
+import "errors"
+
 func PKCS7Pad(chunk []byte, targetLength int) []byte {
 	overhang := len(chunk) % targetLength
-
-	if overhang == 0 {
-		return chunk
-	}
 
 	pad := uint8(targetLength - overhang)
 
@@ -16,52 +14,35 @@ func PKCS7Pad(chunk []byte, targetLength int) []byte {
 	return chunk
 }
 
-func PKCS7Unpad(text []byte) []byte {
+func PKCS7Unpad(text []byte) ([]byte, error) {
 	length := len(text)
 	if length == 0 {
-		return text
+		return []byte{}, errors.New("invalid padding, length was zero")
 	}
 
 	lastByte := int(text[length-1])
 
+	if lastByte == 0 {
+		return []byte{}, errors.New("invalid padding, last byte was 0")
+	}
+
 	if lastByte > length {
-		return text
+		return []byte{}, errors.New("invalid padding, final byte was greater than length of string")
 	}
 
 	speculatedPadStart := length - lastByte
 
 	for i := speculatedPadStart; i < length-1; i++ {
 		if text[length-1] != text[i] {
-			return text
+			return []byte{}, errors.New("invalid padding")
 		}
 	}
 
-	return text[:speculatedPadStart]
+	return text[:speculatedPadStart], nil
 }
 
 func IsValidPKCS7(text []byte) bool {
-	length := len(text)
-	if length == 0 {
-		return true
-	}
+	_, err := PKCS7Unpad(text)
 
-	lastByte := int(text[length-1])
-
-	if lastByte > length {
-		return false
-	}
-
-	if lastByte == 0 {
-		return false
-	}
-
-	speculatedPadStart := length - lastByte
-
-	for i := speculatedPadStart; i < length-1; i++ {
-		if text[length-1] != text[i] {
-			return false
-		}
-	}
-
-	return true
+	return err == nil
 }

@@ -13,7 +13,9 @@ func CBCDecryptAES(ciphertext []byte, key []byte, iv []byte) []byte {
 
 	plaintext := CBCDecryptPadded(ciphertext, cipher, iv)
 
-	return padding.PKCS7Unpad(plaintext)
+	unpadded, _ := padding.PKCS7Unpad(plaintext)
+
+	return unpadded
 }
 
 func CBCDecryptPadded(ciphertext []byte, cipher cipher.Block, iv []byte) []byte {

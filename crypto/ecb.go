@@ -15,7 +15,9 @@ func ECBDecryptAES(cipherText []byte, key []byte) []byte {
 		cipher.Decrypt(plainText[bs:be], cipherText[bs:be])
 	}
 
-	return padding.PKCS7Unpad(plainText)
+	unpadded, _ := padding.PKCS7Unpad(plainText)
+
+	return unpadded
 }
 
 func ECBEncryptAES(plainText []byte, key []byte) []byte {
