@@ -38,3 +38,6 @@ func TestProblemEighteen(t *testing.T) {
 		t.Errorf("got: %s, want: %s", got, want)
 	}
 }
+
+// 3.19 Break fixed-nonce CTR mode using substitutions
+// we are asked to do this one the old-fashioned way

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/joshuarider/cryptopals/crypto"
@@ -196,4 +198,37 @@ func CBCPaddingOracle(ciphertext []byte, cipher cipher.Block, iv []byte) []byte 
 	}
 
 	return found
+}
+
+// Problem 19
+func ReUseCTRSeed() {
+	inputFile := "input/3/19.txt"
+
+	file, err := os.Open(inputFile)
+	if err != nil {
+		fmt.Printf("Unable to open: %s, %v\n", inputFile, err)
+		file.Close()
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	cipher, _ := aes.NewCipher([]byte("YELLOW SUBMARINE"))
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		bytes, err := encoding.B64ToBytes(scanner.Text())
+		if err != nil {
+			fmt.Println("Failed to base64 decode. Exiting.")
+			os.Exit(1)
+		}
+
+		encrypter := crypto.NewCTR(cipher, uint64(0))
+
+		s := make([]string, len(bytes))
+		for i, byte := range encrypter.Encrypt(bytes) {
+			s[i] = fmt.Sprintf("%d", byte)
+		}
+
+		fmt.Printf("[%s],\n", strings.Join(s, ", "))
+	}
 }
