@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"crypto/aes"
+	"math"
+	"os"
 	"testing"
 
+	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
 	"github.com/joshuarider/cryptopals/crypto/padding"
+	"github.com/joshuarider/cryptopals/crypto/xor"
 	"github.com/joshuarider/cryptopals/encoding"
 	"github.com/joshuarider/cryptopals/util"
 )
@@ -41,3 +46,66 @@ func TestProblemEighteen(t *testing.T) {
 
 // 3.19 Break fixed-nonce CTR mode using substitutions
 // we are asked to do this one the old-fashioned way
+
+// 3.20 Break fixed-nonce CTR statistically
+func TestProblemTwenty(t *testing.T) {
+	inputFile := "input/3/20.txt"
+
+	file, err := os.Open(inputFile)
+	if err != nil {
+		t.Fatalf("Unable to open %s, %v\n", inputFile, err)
+	}
+	defer file.Close()
+
+	cipher, _ := aes.NewCipher([]byte("YELLOW SUBMARINE"))
+
+	plaintexts := make([][]byte, 0)
+	ciphertexts := make([][]byte, 0)
+
+	shortest := math.MaxInt64
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		bytes, err := encoding.B64ToBytes(scanner.Text())
+		if err != nil {
+			t.Fatalf("Failed to base64 decode: %v", err)
+		}
+
+		if len(bytes) < shortest {
+			shortest = len(bytes)
+		}
+
+		encrypter := crypto.NewCTR(cipher, 0)
+		ciphertext := encrypter.Encrypt(bytes)
+
+		plaintexts = append(plaintexts, bytes)
+		ciphertexts = append(ciphertexts, ciphertext)
+	}
+
+	transpositions := make([][]byte, shortest)
+
+	for _, ciphertext := range ciphertexts {
+		for i, b := range ciphertext {
+			if i >= shortest {
+				break
+			}
+
+			transpositions[i] = append(transpositions[i], b)
+		}
+	}
+
+	key := make([]byte, shortest)
+
+	for i, transposition := range transpositions {
+		key[i] = cracker.BestGuess(transposition)
+	}
+
+	for i, c := range ciphertexts {
+		got := xor.Bytes(key, c[0:shortest])
+
+		if want := plaintexts[i][0:shortest]; !util.Compare(want, got) {
+			t.Errorf("wanted %s, got %s", want, got)
+		}
+	}
+}
