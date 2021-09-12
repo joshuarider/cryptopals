@@ -12,6 +12,7 @@ import (
 	"github.com/joshuarider/cryptopals/crypto/padding"
 	"github.com/joshuarider/cryptopals/crypto/xor"
 	"github.com/joshuarider/cryptopals/encoding"
+	"github.com/joshuarider/cryptopals/rand"
 	"github.com/joshuarider/cryptopals/util"
 )
 
@@ -107,5 +108,33 @@ func TestProblemTwenty(t *testing.T) {
 		if want := plaintexts[i][0:shortest]; !util.Compare(want, got) {
 			t.Errorf("wanted %s, got %s", want, got)
 		}
+	}
+}
+
+// 3.21 Implement the MT19937 Mersenne Twister RNG
+func TestProblemTwentyOne(t *testing.T) {
+	mt := rand.NewMersenneTwister(2)
+
+	// values taken from https://create.stephan-brumme.com/mersenne-twister/
+	//
+	first := int32(1872583848)
+	second := int32(794921487)
+	third := int32(111352301)
+	fourth := int32(-294029752)
+
+	if got := mt.Rand(); got != first {
+		t.Fatalf("wanted %d, got %d", first, got)
+	}
+
+	if got := mt.Rand(); got != second {
+		t.Fatalf("wanted %d, got %d", second, got)
+	}
+
+	if got := mt.Rand(); got != third {
+		t.Fatalf("wanted %d, got %d", third, got)
+	}
+
+	if got := mt.Rand(); got != fourth {
+		t.Fatalf("wanted %d, got %d", fourth, got)
 	}
 }
