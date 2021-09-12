@@ -116,7 +116,7 @@ func TestProblemTwentyOne(t *testing.T) {
 	mt := rand.NewMersenneTwister(2)
 
 	// values taken from https://create.stephan-brumme.com/mersenne-twister/
-	//
+
 	first := int32(1872583848)
 	second := int32(794921487)
 	third := int32(111352301)
