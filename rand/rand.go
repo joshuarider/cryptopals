@@ -21,19 +21,17 @@ type mersenneTwister struct {
 	upperMask uint32
 }
 
-func NewMersenneTwister(seed uint32) *mersenneTwister {
+func NewMersenneTwister() *mersenneTwister {
 	mt := mersenneTwister{
 		index:     n + 1,
 		lowerMask: (1 << r) - 1,
 		upperMask: ^((1 << r) - 1) & 0xFFFFFFFF,
 	}
 
-	mt.initialize(seed)
-
 	return &mt
 }
 
-func (mt *mersenneTwister) initialize(seed uint32) {
+func (mt *mersenneTwister) Initialize(seed uint32) {
 	mt.index = n
 	mt.state[0] = seed
 
@@ -46,7 +44,7 @@ func (mt *mersenneTwister) Rand() int32 {
 	if mt.index >= n {
 		if mt.index > n {
 			// MT was never initialized
-			mt.initialize(uint32(5489))
+			mt.Initialize(uint32(5489))
 		}
 
 		mt.twist()

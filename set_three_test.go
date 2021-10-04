@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"crypto/aes"
 	"math"
+	math_rand "math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/joshuarider/cryptopals/cracker"
 	"github.com/joshuarider/cryptopals/crypto"
@@ -113,10 +115,10 @@ func TestProblemTwenty(t *testing.T) {
 
 // 3.21 Implement the MT19937 Mersenne Twister RNG
 func TestProblemTwentyOne(t *testing.T) {
-	mt := rand.NewMersenneTwister(2)
+	mt := rand.NewMersenneTwister()
+	mt.Initialize(2)
 
 	// values taken from https://create.stephan-brumme.com/mersenne-twister/
-
 	first := int32(1872583848)
 	second := int32(794921487)
 	third := int32(111352301)
@@ -136,5 +138,31 @@ func TestProblemTwentyOne(t *testing.T) {
 
 	if got := mt.Rand(); got != fourth {
 		t.Fatalf("wanted %d, got %d", fourth, got)
+	}
+}
+
+// 3.22 Crack an MT19937 seed
+func TestProblemTwentyTwo(t *testing.T) {
+	timestamp := uint32(time.Now().Unix())
+	seed := timestamp + uint32(math_rand.Intn(1000))
+
+	mt := rand.NewMersenneTwister()
+	mt.Initialize(seed)
+
+	sample := mt.Rand()
+
+	test_mt := rand.NewMersenneTwister()
+	guess := uint32(0)
+
+	for i := timestamp; i < timestamp+1000; i++ {
+		test_mt.Initialize(i)
+		if candidate := test_mt.Rand(); sample == candidate {
+			guess = i
+			break
+		}
+	}
+
+	if guess != seed {
+		t.Errorf("wanted: %d, got: %d", seed, guess)
 	}
 }
