@@ -59,7 +59,7 @@ func (mt *mersenneTwister) Rand() int32 {
 
 	mt.index = mt.index + 1
 
-	return int32(y & 0xFFFFFFFF)
+	return int32(y)
 }
 
 func (mt *mersenneTwister) twist() {
@@ -74,4 +74,9 @@ func (mt *mersenneTwister) twist() {
 		mt.state[i] = mt.state[(i+m)%n] ^ xA
 	}
 	mt.index = 0
+}
+
+func (mt *mersenneTwister) LoadState(state [n]uint32) {
+	mt.state = state
+	mt.twist()
 }

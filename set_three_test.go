@@ -166,3 +166,27 @@ func TestProblemTwentyTwo(t *testing.T) {
 		t.Errorf("wanted: %d, got: %d", seed, guess)
 	}
 }
+
+// 3.23 Clone an MT19937 RNG from its output
+func TestProblemTwentyThree(t *testing.T) {
+	var clonedState [624]uint32
+
+	mt := rand.NewMersenneTwister()
+	mt.Initialize(uint32(math_rand.Intn(1000)))
+
+	for i := 0; i < len(clonedState); i++ {
+		clonedState[i] = untemperMT(uint32(mt.Rand()))
+	}
+
+	mtClone := rand.NewMersenneTwister()
+	mtClone.LoadState(clonedState)
+
+	for i := 0; i < 1000; i++ {
+		want := mt.Rand()
+		got := mtClone.Rand()
+
+		if got != want {
+			t.Fatal("Cloned output did not match expected")
+		}
+	}
+}

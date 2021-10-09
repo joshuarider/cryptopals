@@ -232,3 +232,33 @@ func ReUseCTRSeed() {
 		fmt.Printf("[%s],\n", strings.Join(s, ", "))
 	}
 }
+
+// Problem 23
+func untemperRightShift(y uint32, shiftSize uint32, mask uint32) uint32 {
+	discovered := y
+
+	for knownBits := shiftSize; knownBits < 32; knownBits += shiftSize {
+		discovered = y ^ ((discovered >> shiftSize) & mask)
+	}
+
+	return discovered
+}
+
+func untemperLeftShift(y uint32, shiftSize uint32, mask uint32) uint32 {
+	discovered := y
+
+	for knownBits := shiftSize; knownBits < 32; knownBits += shiftSize {
+		discovered = y ^ ((discovered << shiftSize) & mask)
+	}
+
+	return discovered
+}
+
+func untemperMT(t uint32) uint32 {
+	t = untemperRightShift(t, 18, 0xFFFFFFFF)
+	t = untemperLeftShift(t, 15, 0xEFC60000)
+	t = untemperLeftShift(t, 7, 0x9D2C5680)
+	t = untemperRightShift(t, 11, 0xFFFFFFFF)
+
+	return t
+}
