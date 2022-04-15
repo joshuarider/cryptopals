@@ -190,3 +190,51 @@ func TestProblemTwentyThree(t *testing.T) {
 		}
 	}
 }
+
+// 3.24 Create the MT19937 stream cipher and break it
+func TestProblemTwentyFour(t *testing.T) {
+	// create stream cipher with 16-bit seed
+	want := []byte("YELLOW SUBMARINEYELLOW SUBMARINE")
+	seed := math_rand.Uint32() >> 16
+	encryptStream := crypto.NewMTStream(seed)
+
+	ciphertext := encryptStream.Encrypt(want)
+
+	decryptStream := crypto.NewMTStream(seed)
+	got := decryptStream.Encrypt(ciphertext)
+
+	if !util.Compare(got, want) {
+		t.Fatalf("wanted: %v, got: %v", want, got)
+	}
+
+	// crack 16-bit seed
+	in := prependJunk([]byte("AAAAAAAAAAAAAA"))
+
+	seed = math_rand.Uint32() >> 16
+	mtStream := crypto.NewMTStream(seed)
+
+	ciphertext = mtStream.Encrypt(in)
+
+	cracked, err := brute16BitMTStream(ciphertext)
+	if err != nil {
+		t.Fatal("Failed to crack 16 bit seed")
+	}
+
+	if cracked != seed {
+		t.Fatalf("wanted: %d, got: %d", seed, cracked)
+	}
+
+	// crack a seed set with current time
+	// slow, so commenting out
+	// time_seed := uint32(time.Now().Unix())
+
+	// token := seedToPasswordResetToken(time_seed)
+
+	// found, err := bruteTimeSeed(token)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// if time_seed != found {
+	// 	t.Fatalf("wanted: %d, got: %d", time_seed, found)
+	// }
+}

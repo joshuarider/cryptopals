@@ -14,15 +14,15 @@ const c uint32 = 0xEFC60000
 const l uint32 = 18
 const f uint32 = 1812433253
 
-type mersenneTwister struct {
+type MersenneTwister struct {
 	state     [n]uint32
 	index     uint32
 	lowerMask uint32
 	upperMask uint32
 }
 
-func NewMersenneTwister() *mersenneTwister {
-	mt := mersenneTwister{
+func NewMersenneTwister() *MersenneTwister {
+	mt := MersenneTwister{
 		index:     n + 1,
 		lowerMask: (1 << r) - 1,
 		upperMask: ^((1 << r) - 1) & 0xFFFFFFFF,
@@ -31,7 +31,7 @@ func NewMersenneTwister() *mersenneTwister {
 	return &mt
 }
 
-func (mt *mersenneTwister) Initialize(seed uint32) {
+func (mt *MersenneTwister) Initialize(seed uint32) {
 	mt.index = n
 	mt.state[0] = seed
 
@@ -40,7 +40,7 @@ func (mt *mersenneTwister) Initialize(seed uint32) {
 	}
 }
 
-func (mt *mersenneTwister) Rand() int32 {
+func (mt *MersenneTwister) Rand() int32 {
 	if mt.index >= n {
 		if mt.index > n {
 			// MT was never initialized
@@ -62,7 +62,7 @@ func (mt *mersenneTwister) Rand() int32 {
 	return int32(y)
 }
 
-func (mt *mersenneTwister) twist() {
+func (mt *MersenneTwister) twist() {
 	for i := uint32(0); i < n; i++ {
 		x := (mt.state[i] & mt.upperMask) + (mt.state[(i+1)%n] & mt.lowerMask)
 		xA := x >> 1
@@ -76,7 +76,7 @@ func (mt *mersenneTwister) twist() {
 	mt.index = 0
 }
 
-func (mt *mersenneTwister) LoadState(state [n]uint32) {
+func (mt *MersenneTwister) LoadState(state [n]uint32) {
 	mt.state = state
 	mt.twist()
 }

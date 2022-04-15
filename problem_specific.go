@@ -4,14 +4,20 @@ import (
 	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
+	"encoding/binary"
+	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/joshuarider/cryptopals/crypto"
 	"github.com/joshuarider/cryptopals/crypto/padding"
 	"github.com/joshuarider/cryptopals/encoding"
+	pals_rand "github.com/joshuarider/cryptopals/rand"
+	"github.com/joshuarider/cryptopals/util"
 )
 
 // Problem 11
@@ -261,4 +267,74 @@ func untemperMT(t uint32) uint32 {
 	t = untemperRightShift(t, 11, 0xFFFFFFFF)
 
 	return t
+}
+
+// Problem 24
+func prependJunk(base []byte) []byte {
+	letters := []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	in := make([]byte, rand.Intn(40))
+
+	for i := 0; i < len(in); i++ {
+		in[i] = letters[rand.Intn(len(letters))]
+	}
+
+	in = append(in, base...)
+	return in
+}
+
+func brute16BitMTStream(target []byte) (uint32, error) {
+	sample := make([]byte, len(target)-14)
+	sample = append(sample, []byte("AAAAAAAAAAAAAA")...)
+
+	for i := uint32(0); i < uint32(math.Pow(2, 16)); i++ {
+		decryptStream := crypto.NewMTStream(i)
+		candidate := decryptStream.Encrypt(sample)
+
+		if util.Compare(candidate[len(sample)-14:], target[len(sample)-14:]) {
+			return i, nil
+		}
+	}
+
+	return 0, errors.New("No match found")
+}
+
+func seedToPasswordResetToken(seed uint32) string {
+	twister := pals_rand.NewMersenneTwister()
+	twister.Initialize(seed)
+	token := make([]byte, 16)
+
+	for i := 0; i < 16; i = i + 4 {
+		binary.LittleEndian.PutUint32(token[i:i+4], uint32(twister.Rand()))
+	}
+
+	return encoding.BytesToHex(token)
+}
+
+func bruteTimeSeed(token string) (uint32, error) {
+	rawToken, _ := encoding.HexToBytes(token)
+
+	twister := pals_rand.NewMersenneTwister()
+
+	// since Apr 2022
+	for i := uint32(1648771201); i <= uint32(time.Now().Unix()); i++ {
+		twister.Initialize(i)
+
+		if checkSeed(rawToken, twister) {
+			return i, nil
+		}
+	}
+
+	return 0, errors.New("we missed")
+}
+
+func checkSeed(candidate []byte, twister *pals_rand.MersenneTwister) bool {
+	if len(candidate) == 0 {
+		return true
+	}
+
+	if uint32(twister.Rand()) == binary.LittleEndian.Uint32(candidate[0:4]) {
+		return checkSeed(candidate[4:], twister)
+	}
+
+	return false
 }
