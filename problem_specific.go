@@ -338,3 +338,20 @@ func checkSeed(candidate []byte, twister *pals_rand.MersenneTwister) bool {
 
 	return false
 }
+
+// Problem 25
+func edit(ciphertext []byte, key []byte, offset int, newText string) []byte {
+	newBytes := []byte(newText)
+
+	cipher, _ := aes.NewCipher(key)
+	ctr := crypto.NewCTR(cipher, 0)
+
+	plaintext := ctr.Encrypt(ciphertext)
+
+	editText := append(plaintext[0:offset], newBytes...)
+	editText = append(editText, plaintext[offset+len(newBytes):]...)
+
+	ctr = crypto.NewCTR(cipher, 0)
+
+	return ctr.Encrypt(editText)
+}
