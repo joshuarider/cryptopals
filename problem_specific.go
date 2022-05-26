@@ -74,8 +74,8 @@ func surroundingECBEncrypter(prefix []byte, suffix []byte) func([]byte) []byte {
 	}
 }
 
-// Problem 16
-func cookieStringCBCEncrypter(encrypter func([]byte) []byte) func(string) []byte {
+// Problem 16 (and 26!)
+func cookieStringEncrypter(encrypter func([]byte) []byte) func(string) []byte {
 	prefix := "comment1=cooking%20MCs;userdata="
 	suffix := ";comment2=%20like%20a%20pound%20of%20bacon"
 
@@ -87,7 +87,7 @@ func cookieStringCBCEncrypter(encrypter func([]byte) []byte) func(string) []byte
 	}
 }
 
-func cookieStringCBCDecrypter(decrypter func([]byte) []byte) func([]byte) string {
+func cookieStringDecrypter(decrypter func([]byte) []byte) func([]byte) string {
 	return func(c []byte) string {
 		return string(decrypter(c))
 	}
@@ -96,7 +96,7 @@ func cookieStringCBCDecrypter(decrypter func([]byte) []byte) func([]byte) string
 func cookieStringCBCPair() (func(string) []byte, func([]byte) string) {
 	e, d := crypto.CBCPair()
 
-	return cookieStringCBCEncrypter(e), cookieStringCBCDecrypter(d)
+	return cookieStringEncrypter(e), cookieStringDecrypter(d)
 }
 
 func hasAdminClaim(cookie string) bool {
@@ -354,4 +354,12 @@ func edit(ciphertext []byte, key []byte, offset int, newText string) []byte {
 	ctr = crypto.NewCTR(cipher, 0)
 
 	return ctr.Encrypt(editText)
+}
+
+// Problem 26
+func cookieStringCTRPair() (func(string) []byte, func([]byte) string) {
+	key := crypto.RandomBytes(16)
+	cipher, _ := aes.NewCipher(key)
+
+	return cookieStringEncrypter(crypto.NewCTR(cipher, 0).Encrypt), cookieStringDecrypter(crypto.NewCTR(cipher, 0).Encrypt)
 }

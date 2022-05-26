@@ -24,3 +24,23 @@ func TestProblemTwentyFive(t *testing.T) {
 		t.Fatalf("wanted: %v, got: %v", FUNKY_MUSIC, string(plaintext))
 	}
 }
+
+// 4.26 CTR bitflipping
+func TestProblemTwentySix(t *testing.T) {
+	e, d := cookieStringCTRPair()
+
+	slug := string(make([]byte, 16))
+	ciphertext := e(slug)
+
+	byteStream := ciphertext[32:48]
+	target := []byte("f;admin=true;a=f")
+	injection := xor.Bytes(byteStream, target)
+
+	tampered := append(append(ciphertext[0:32], injection...), ciphertext[48:]...)
+
+	cookie := d(tampered)
+
+	if !hasAdminClaim(cookie) {
+		t.Errorf("expected 'admin=true', got %v", cookie)
+	}
+}
