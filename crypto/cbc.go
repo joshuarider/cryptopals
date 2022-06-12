@@ -81,3 +81,12 @@ func CBCPair() (e, d func([]byte) []byte) {
 
 	return
 }
+
+func CBCPairWithKeyAsIV() (key []byte, e, d func([]byte) []byte) {
+	key = RandomBytes(16)
+
+	e = CBCEncrypter(key, key)
+	d = CBCDecrypter(key, key)
+
+	return
+}

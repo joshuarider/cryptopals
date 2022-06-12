@@ -6,6 +6,7 @@ import (
 
 	"github.com/joshuarider/cryptopals/crypto"
 	"github.com/joshuarider/cryptopals/crypto/xor"
+	"github.com/joshuarider/cryptopals/util"
 )
 
 // 4.25 Break "random access read/write" AES CTR
@@ -42,5 +43,24 @@ func TestProblemTwentySix(t *testing.T) {
 
 	if !hasAdminClaim(cookie) {
 		t.Errorf("expected 'admin=true', got %v", cookie)
+	}
+}
+
+// 4.27 Recover the key from CBC with IV=Key
+func TestProblemTwentySeven(t *testing.T) {
+	key, e, d := cookieStringCBCPairWithKeyAsIV()
+	ciphertext := e("abcdef")
+
+	frankencipher := ciphertext[0:16]
+	frankencipher = append(frankencipher, make([]byte, 16)...)
+	frankencipher = append(frankencipher, ciphertext[0:16]...)
+	frankencipher = append(frankencipher, ciphertext[64:]...)
+
+	plaintext := d(frankencipher)
+
+	recovered := xor.Bytes(plaintext[0:16], plaintext[32:48])
+
+	if !util.Compare(key, recovered) {
+		t.Errorf("wanted: %v, got: %v", key, recovered)
 	}
 }

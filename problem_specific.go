@@ -363,3 +363,11 @@ func cookieStringCTRPair() (func(string) []byte, func([]byte) string) {
 
 	return cookieStringEncrypter(crypto.NewCTR(cipher, 0).Encrypt), cookieStringDecrypter(crypto.NewCTR(cipher, 0).Encrypt)
 }
+
+// Problem 27
+func cookieStringCBCPairWithKeyAsIV() ([]byte, func(string) []byte, func([]byte) []byte) {
+	key, enc, dec := crypto.CBCPairWithKeyAsIV()
+	e := cookieStringEncrypter(enc)
+
+	return key, e, dec
+}
